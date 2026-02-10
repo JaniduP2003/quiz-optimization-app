@@ -2,6 +2,15 @@
 
 A web application where users attempt quizzes and get **optimal question recommendations** using the **0/1 Knapsack dynamic programming algorithm**. Given a time budget, the app selects the subset of questions that maximizes total score.
 
+## App Screens
+
+| | |
+|---|---|
+| ![Screen 0](Screens/0.png) | ![Screen 1](Screens/1.png) |
+| ![Screen 2](Screens/2.png) | ![Screen 3](Screens/3.png) |
+| ![Screen 4](Screens/4.png) | ![Screen 5](Screens/5.png) |
+| ![Screen 6](Screens/6.png) | ![Screen 7](Screens/7.png) |
+
 ## Tech Stack
 
 - **Next.js 16** (App Router) with TypeScript
