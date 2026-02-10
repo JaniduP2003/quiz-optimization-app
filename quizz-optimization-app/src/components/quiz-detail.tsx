@@ -128,6 +128,9 @@ export function QuizDetail({ quiz, questions }: QuizDetailProps) {
   ];
   const optimizedIds = new Set(optimizeResult?.selectedQuestionIds ?? []);
 
+  // O(n) index map — avoids O(n) indexOf inside render loops
+  const questionIndexMap = new Map(questions.map((q, idx) => [q.id, idx]));
+
   const recommendedQuestions = questions.filter((q) => optimizedIds.has(q.id));
   const otherQuestions = questions.filter((q) => !optimizedIds.has(q.id));
 
@@ -458,20 +461,17 @@ export function QuizDetail({ quiz, questions }: QuizDetailProps) {
                   No questions were recommended for the given constraints.
                 </p>
               ) : (
-                recommendedQuestions.map((q) => {
-                  const originalIndex = questions.indexOf(q);
-                  return (
-                    <QuestionCard
-                      key={q.id}
-                      question={q}
-                      index={originalIndex}
-                      isOptimized={true}
-                      answer={answers[q.id] ?? ""}
-                      onAnswerChange={(val) => handleAnswerChange(q.id, val)}
-                      difficultyColor={difficultyColor}
-                    />
-                  );
-                })
+                recommendedQuestions.map((q) => (
+                  <QuestionCard
+                    key={q.id}
+                    question={q}
+                    index={questionIndexMap.get(q.id) ?? 0}
+                    isOptimized={true}
+                    answer={answers[q.id] ?? ""}
+                    onAnswerChange={(val) => handleAnswerChange(q.id, val)}
+                    difficultyColor={difficultyColor}
+                  />
+                ))
               )}
             </TabsContent>
 
@@ -491,20 +491,17 @@ export function QuizDetail({ quiz, questions }: QuizDetailProps) {
 
             {otherQuestions.length > 0 && (
               <TabsContent value="skipped" className="space-y-3 mt-4">
-                {otherQuestions.map((q) => {
-                  const originalIndex = questions.indexOf(q);
-                  return (
-                    <QuestionCard
-                      key={q.id}
-                      question={q}
-                      index={originalIndex}
-                      isOptimized={false}
-                      answer={answers[q.id] ?? ""}
-                      onAnswerChange={(val) => handleAnswerChange(q.id, val)}
-                      difficultyColor={difficultyColor}
-                    />
-                  );
-                })}
+                {otherQuestions.map((q) => (
+                  <QuestionCard
+                    key={q.id}
+                    question={q}
+                    index={questionIndexMap.get(q.id) ?? 0}
+                    isOptimized={false}
+                    answer={answers[q.id] ?? ""}
+                    onAnswerChange={(val) => handleAnswerChange(q.id, val)}
+                    difficultyColor={difficultyColor}
+                  />
+                ))}
               </TabsContent>
             )}
           </Tabs>
