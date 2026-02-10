@@ -57,7 +57,7 @@ export async function POST(
       query = query.eq("category", parsed.data.filters.category);
     }
 
-    const { data: questions, error } = query;
+    const { data: questions, error } = await query;
 
     if (error) {
       return NextResponse.json<ApiError>(
