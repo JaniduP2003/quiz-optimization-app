@@ -417,6 +417,13 @@ export function QuizDetail({ quiz, questions }: QuizDetailProps) {
               </div>
               <Progress value={timeUsedPercent} />
             </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Time utilization</span>
+                <span className="font-medium">{timeUsedPercent}%</span>
+              </div>
+              <Progress value={timeUsedPercent} />
+            </div>
           </CardContent>
         </Card>
       )}
