@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { z } from "zod";
 import type { ApiError } from "@/lib/types";
 
 /**
@@ -57,6 +58,27 @@ export async function requireQuiz(
   }
 
   return quiz;
+}
+
+/**
+ * Parses the request JSON body against a Zod schema.
+ * Returns the validated data or a 400 response.
+ */
+export async function validateBody<T extends z.ZodTypeAny>(
+  schema: T,
+  request: Request
+): Promise<z.infer<T> | NextResponse<ApiError>> {
+  const body = await request.json();
+  const parsed = schema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json<ApiError>(
+      { error: "Invalid input", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  return parsed.data;
 }
 
 /** Type guard: true when the helper returned an error response instead of data. */

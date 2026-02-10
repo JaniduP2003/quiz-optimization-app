@@ -4,6 +4,7 @@ import {
   handleApiError,
   requireAuth,
   requireQuiz,
+  validateBody,
   isErrorResponse,
 } from "@/lib/api-utils";
 import { createAttemptSchema } from "@/lib/validations";
@@ -20,15 +21,8 @@ export async function POST(
     const user = await requireAuth(supabase);
     if (isErrorResponse(user)) return user;
 
-    // Validate body
-    const body = await request.json();
-    const parsed = createAttemptSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json<ApiError>(
-        { error: "Invalid input", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
+    const parsed = await validateBody(createAttemptSchema, request);
+    if (isErrorResponse(parsed)) return parsed;
 
     const quiz = await requireQuiz(supabase, quizId);
     if (isErrorResponse(quiz)) return quiz;
@@ -39,7 +33,7 @@ export async function POST(
       .insert({
         user_id: user.id,
         quiz_id: quizId,
-        total_time_limit: parsed.data.totalTimeLimit,
+        total_time_limit: parsed.totalTimeLimit,
       })
       .select("id")
       .single();

@@ -4,6 +4,7 @@ import {
   handleApiError,
   requireAuth,
   requireQuiz,
+  validateBody,
   isErrorResponse,
 } from "@/lib/api-utils";
 import { optimizeSchema } from "@/lib/validations";
@@ -21,15 +22,8 @@ export async function POST(
     const user = await requireAuth(supabase);
     if (isErrorResponse(user)) return user;
 
-    // Validate body
-    const body = await request.json();
-    const parsed = optimizeSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json<ApiError>(
-        { error: "Invalid input", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
+    const parsed = await validateBody(optimizeSchema, request);
+    if (isErrorResponse(parsed)) return parsed;
 
     const quiz = await requireQuiz(supabase, quizId);
     if (isErrorResponse(quiz)) return quiz;
@@ -37,11 +31,11 @@ export async function POST(
     // Build query with optional filters
     let query = supabase.from("questions").select("*").eq("quiz_id", quizId);
 
-    if (parsed.data.filters?.difficulty) {
-      query = query.eq("difficulty", parsed.data.filters.difficulty);
+    if (parsed.filters?.difficulty) {
+      query = query.eq("difficulty", parsed.filters.difficulty);
     }
-    if (parsed.data.filters?.category) {
-      query = query.eq("category", parsed.data.filters.category);
+    if (parsed.filters?.category) {
+      query = query.eq("category", parsed.filters.category);
     }
 
     const { data: questions, error } = await query;
@@ -56,7 +50,7 @@ export async function POST(
     // Run DP knapsack optimization
     const result = optimizeQuestions(
       questions as Question[],
-      parsed.data.totalTimeLimit
+      parsed.totalTimeLimit
     );
 
     return NextResponse.json<OptimizeResult>(result);
