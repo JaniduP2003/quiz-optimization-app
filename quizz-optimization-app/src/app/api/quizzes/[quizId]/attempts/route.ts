@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { handleApiError } from "@/lib/api-utils";
 import { createAttemptSchema } from "@/lib/validations";
 import type { ApiError } from "@/lib/types";
 
@@ -65,10 +66,7 @@ export async function POST(
     }
 
     return NextResponse.json({ attemptId: data.id }, { status: 201 });
-  } catch {
-    return NextResponse.json<ApiError>(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    return handleApiError(err);
   }
 }

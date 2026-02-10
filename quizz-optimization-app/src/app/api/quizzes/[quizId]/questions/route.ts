@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { handleApiError } from "@/lib/api-utils";
 import type { Question, ApiError } from "@/lib/types";
 
 export async function GET(
@@ -38,10 +39,7 @@ export async function GET(
     }
 
     return NextResponse.json<Question[]>(data);
-  } catch {
-    return NextResponse.json<ApiError>(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    return handleApiError(err);
   }
 }
