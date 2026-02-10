@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { handleApiError } from "@/lib/api-utils";
+import { handleApiError, requireAuth, isErrorResponse } from "@/lib/api-utils";
 import { submitAnswersSchema } from "@/lib/validations";
 import type { ApiError } from "@/lib/types";
 
@@ -12,16 +12,8 @@ export async function POST(
     const { attemptId } = await params;
     const supabase = await createSupabaseServerClient();
 
-    // Auth check
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json<ApiError>(
-        { error: "Unauthenticated" },
-        { status: 401 }
-      );
-    }
+    const user = await requireAuth(supabase);
+    if (isErrorResponse(user)) return user;
 
     // Validate body
     const body = await request.json();

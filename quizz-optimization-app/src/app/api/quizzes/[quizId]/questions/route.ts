@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { handleApiError } from "@/lib/api-utils";
+import { handleApiError, requireQuiz, isErrorResponse } from "@/lib/api-utils";
 import type { Question, ApiError } from "@/lib/types";
 
 export async function GET(
@@ -11,19 +11,8 @@ export async function GET(
     const { quizId } = await params;
     const supabase = await createSupabaseServerClient();
 
-    // Verify quiz exists
-    const { data: quiz, error: quizError } = await supabase
-      .from("quizzes")
-      .select("id")
-      .eq("id", quizId)
-      .single();
-
-    if (quizError || !quiz) {
-      return NextResponse.json<ApiError>(
-        { error: "Quiz not found" },
-        { status: 404 }
-      );
-    }
+    const quiz = await requireQuiz(supabase, quizId);
+    if (isErrorResponse(quiz)) return quiz;
 
     const { data, error } = await supabase
       .from("questions")

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { handleApiError } from "@/lib/api-utils";
+import {
+  handleApiError,
+  requireAuth,
+  requireQuiz,
+  isErrorResponse,
+} from "@/lib/api-utils";
 import { createAttemptSchema } from "@/lib/validations";
 import type { ApiError } from "@/lib/types";
 
@@ -12,16 +17,8 @@ export async function POST(
     const { quizId } = await params;
     const supabase = await createSupabaseServerClient();
 
-    // Auth check
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json<ApiError>(
-        { error: "Unauthenticated" },
-        { status: 401 }
-      );
-    }
+    const user = await requireAuth(supabase);
+    if (isErrorResponse(user)) return user;
 
     // Validate body
     const body = await request.json();
@@ -33,19 +30,8 @@ export async function POST(
       );
     }
 
-    // Verify quiz exists
-    const { data: quiz, error: quizError } = await supabase
-      .from("quizzes")
-      .select("id")
-      .eq("id", quizId)
-      .single();
-
-    if (quizError || !quiz) {
-      return NextResponse.json<ApiError>(
-        { error: "Quiz not found" },
-        { status: 404 }
-      );
-    }
+    const quiz = await requireQuiz(supabase, quizId);
+    if (isErrorResponse(quiz)) return quiz;
 
     // Create attempt
     const { data, error } = await supabase
